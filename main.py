@@ -1,22 +1,29 @@
-from lock_manager import LockManager as lm
+from scheduler import Scheduler
+import lock_manager as lm
 
 raw_input = input('S = ')
 
 # parser raw_input
 
-lock_manager = LockManager()
+requests = raw_input.split(' ') # p/ input separado por espaços
 
-try:
-    """
-    Requisitar locks ao lock manager e formar o schedule 
-    if (get_write_lock)
-        += schedule
-    else
-        wait
-    """
+lock_manager = lm.LockManager()
 
-    schedule = operations
+scheduler = Scheduler()
 
-    print(schedule)
-except 
-    print('DEADLOCK: ')
+for request in requests:
+    try:
+        operation = request[0]
+        txn = request[1]
+        obj = request[3]
+
+        if operation == 'r':    # read
+            scheduler.read(txn, obj)
+        elif operation == 'w':  # write
+            scheduler.write(txn, obj)
+        else:                   # commit
+            scheduler.commit(txn)
+    except lm.DeadlockException as e:
+        print(e)
+
+print(scheduler.get_schedule())
