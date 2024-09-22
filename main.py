@@ -5,9 +5,8 @@ from os import isatty
 from sys import stdin
 
 
-raw_input = input('S = ')
+raw_input = input('S=')
 requests = separate_operations(raw_input)
-print(requests)
 
 if not isatty(stdin.fileno()):
     print(raw_input)
@@ -24,9 +23,9 @@ for request in requests:
             scheduler.read(txn, obj)
         elif operation == 'w':                  # write
             scheduler.write(txn, obj)
-        elif operation == 'c':                   # commit
+        elif operation == 'c':                  # commit
             scheduler.commit(txn)
     except lm.DeadlockException as e:
         print(e)
 
-print(scheduler.get_schedule())
+print('  ' + scheduler.get_schedule())
