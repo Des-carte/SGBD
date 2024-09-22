@@ -1,21 +1,18 @@
 from scheduler import Scheduler
 import lock_manager as lm
+from parser import *
 
 raw_input = input('S = ')
-
-# parser raw_input
-
-requests = raw_input.split(' ') # p/ input separado por espaços
+requests = separate_operations(raw_input)
 
 lock_manager = lm.LockManager()
-
 scheduler = Scheduler()
 
 for request in requests:
     try:
         operation = request[0]
         txn = request[1]
-        obj = request[3]
+        obj = request[2]
 
         if operation == 'r':    # read
             scheduler.read(txn, obj)
