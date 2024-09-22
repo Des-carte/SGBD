@@ -1,18 +1,16 @@
 from scheduler import Scheduler
 import lock_manager as lm
+from parser import *
 from os import isatty
 from sys import stdin
 
+
 raw_input = input('S = ')
+requests = separate_operations(raw_input)
+print(requests)
 
 if not isatty(stdin.fileno()):
     print(raw_input)
-
-# parser raw_input
-
-requests = raw_input.split(' ') # p/ input separado por espaços
-
-lock_manager = lm.LockManager()
 
 scheduler = Scheduler()
 
@@ -20,14 +18,13 @@ for request in requests:
     try:
         operation = request[0]
         txn = request[1]
+        obj = request[2]
 
-        if operation == 'r':    # read
-            obj = request[3]
+        if operation == 'r':                    # read
             scheduler.read(txn, obj)
-        elif operation == 'w':  # write
-            obj = request[3]
+        elif operation == 'w':                  # write
             scheduler.write(txn, obj)
-        else:                   # commit
+        elif operation == 'c':                   # commit
             scheduler.commit(txn)
     except lm.DeadlockException as e:
         print(e)
