@@ -16,54 +16,53 @@ class DeadlockException(Exception):
 class LockManager:
     def __init__(self):
         self.waits_for_graph = nx.DiGraph()
-        self.locks = {}  # { transaction : { obj : type_lock } }
+        self.locks = {}  # { transaction : [ (obj, type_lock) ] }
 
     def get_write_lock(self, txn, obj):
         for transaction, obj_locks in self.locks.items():
-            if obj in obj_locks:
-                lock_type = obj_locks[obj]
-                if transaction != txn:
+            for obj_lock, lock_type in obj_locks:
+                if obj_lock == obj and transaction != txn:
                     if lock_type == LockType.WRITE or lock_type == LockType.CERTIFY:
                         self.waits_for_graph.add_edge(txn, transaction)
                         if self.detect_deadlock():
                             raise DeadlockException(f"trying to get write lock on {obj} for transaction {txn}")
                         return False
         if txn not in self.locks:
-            self.locks[txn] = {}
-        self.locks[txn][obj] = LockType.WRITE
+            self.locks[txn] = []
+        self.locks[txn].append((obj, LockType.WRITE))
         return True
     
     def get_read_lock(self, txn, obj):
         for transaction, obj_locks in self.locks.items():
-            if obj in obj_locks:
-                lock_type = obj_locks[obj]
-                if transaction != txn and lock_type == LockType.CERTIFY:
+            for obj_lock, lock_type in obj_locks:
+                if obj_lock == obj and transaction != txn and lock_type == LockType.CERTIFY:
                     self.waits_for_graph.add_edge(txn, transaction)
                     if self.detect_deadlock():
                         raise DeadlockException(f"trying to get read lock on {obj} for transaction {txn}")
                     return False
         if txn not in self.locks:
-            self.locks[txn] = {}
-        self.locks[txn][obj] = LockType.READ
+            self.locks[txn] = []
+        self.locks[txn].append((obj, LockType.READ))
         return True
     
     def get_certify_lock(self, txn, obj):
         for transaction, obj_locks in self.locks.items():
-            if obj in obj_locks:
-                lock_type = obj_locks[obj]
-                if transaction != txn:
+            for obj_lock, lock_type in obj_locks:
+                if obj_lock == obj and transaction != txn:
                     self.waits_for_graph.add_edge(txn, transaction)
                     if self.detect_deadlock():
                         raise DeadlockException(f"trying to get certify lock on {obj} for transaction {txn}")
                     return False
         if txn not in self.locks:
-            self.locks[txn] = {}
-        self.locks[txn][obj] = LockType.CERTIFY
+            self.locks[txn] = []
+        self.locks[txn].append((obj, LockType.CERTIFY))
         return True
 
     def update_to_certify_lock(self, txn, obj):
-        if txn in self.locks and obj in self.locks[txn]:
-            self.locks[txn][obj] = LockType.CERTIFY
+        if txn in self.locks:
+            for i, (obj_lock, lock_type) in enumerate(self.locks[txn]):
+                if obj_lock == obj:
+                    self.locks[txn][i] = (obj_lock, LockType.CERTIFY)
 
     def detect_deadlock(self):
         try:
