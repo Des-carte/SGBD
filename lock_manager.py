@@ -73,8 +73,9 @@ class LockManager:
     
     # Retorna uma lista com a vizinhança do vértice txn e remove todos os locks de txn
     def free_locks(self, txn):
-        released_locks = []
-        neighbors = self.waits_for_graph.successors(txn)
+        neighbors = []
+        if txn in self.waits_for_graph:
+            neighbors = self.waits_for_graph.successors(txn)
         if txn in self.locks:
             del self.locks[txn]
         return neighbors
