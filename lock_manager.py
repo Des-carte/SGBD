@@ -22,7 +22,7 @@ class LockManager:
         if obj in self.locks:
             for transaction, lock_type in self.locks[obj].items():
                 if transaction != txn:
-                    if lock_type == LockType.WRITE or lock_type == LockType.CERTIFY
+                    if lock_type == LockType.WRITE or lock_type == LockType.CERTIFY:
                         self.waits_for_graph.add_edge(txn, transaction)
                     if self.detect_deadlock():
                         raise DeadlockException(f"trying to get write lock on {obj}")
