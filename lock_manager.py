@@ -63,6 +63,8 @@ class LockManager:
             for i, (obj_lock, lock_type) in enumerate(self.locks[txn]):
                 if obj_lock == obj:
                     self.locks[txn][i] = (obj_lock, LockType.CERTIFY)
+                    return True
+        return False
 
     def detect_deadlock(self):
         try:
