@@ -16,55 +16,54 @@ class DeadlockException(Exception):
 class LockManager:
     def __init__(self):
         self.waits_for_graph = nx.DiGraph()
-        # Dado um objeto, informa o lock e a transação que o possui
-        self.locks = {}
+        self.locks = {}  # { transaction : { obj : type_lock } }
 
     def get_write_lock(self, txn, obj):
-        if obj in self.locks:
-            for transaction, lock_type in self.locks[obj].items():
+        for transaction, obj_locks in self.locks.items():
+            if obj in obj_locks:
+                lock_type = obj_locks[obj]
                 if transaction != txn:
                     if lock_type == LockType.WRITE or lock_type == LockType.CERTIFY:
                         self.waits_for_graph.add_edge(txn, transaction)
-                    if self.detect_deadlock():
-                        raise DeadlockException(f"trying to get write lock on {obj} for transaction {txn}")
-                    return False
-        if obj not in self.locks:
-            self.locks[obj] = {}
-        self.locks[obj][txn] = LockType.WRITE
+                        if self.detect_deadlock():
+                            raise DeadlockException(f"trying to get write lock on {obj} for transaction {txn}")
+                        return False
+        if txn not in self.locks:
+            self.locks[txn] = {}
+        self.locks[txn][obj] = LockType.WRITE
         return True
     
     def get_read_lock(self, txn, obj):
-        if obj in self.locks:
-            for transaction, lock_type in self.locks[obj].items():
+        for transaction, obj_locks in self.locks.items():
+            if obj in obj_locks:
+                lock_type = obj_locks[obj]
                 if transaction != txn and lock_type == LockType.CERTIFY:
                     self.waits_for_graph.add_edge(txn, transaction)
-                if self.detect_deadlock():
-                    raise DeadlockException(f"trying to get read lock on {obj}")
                     if self.detect_deadlock():
                         raise DeadlockException(f"trying to get read lock on {obj} for transaction {txn}")
-
                     return False
-        if obj not in self.locks:
-            self.locks[obj] = {}
-        self.locks[obj][txn] = LockType.READ
+        if txn not in self.locks:
+            self.locks[txn] = {}
+        self.locks[txn][obj] = LockType.READ
         return True
     
     def get_certify_lock(self, txn, obj):
-        if obj in self.locks:
-            for transaction, lock_type in self.locks[obj].items():
+        for transaction, obj_locks in self.locks.items():
+            if obj in obj_locks:
+                lock_type = obj_locks[obj]
                 if transaction != txn:
                     self.waits_for_graph.add_edge(txn, transaction)
                     if self.detect_deadlock():
                         raise DeadlockException(f"trying to get certify lock on {obj} for transaction {txn}")
                     return False
-        if obj not in self.locks:
-            self.locks[obj] = {}
-        self.locks[obj][txn] = LockType.CERTIFY
+        if txn not in self.locks:
+            self.locks[txn] = {}
+        self.locks[txn][obj] = LockType.CERTIFY
         return True
 
     def update_to_certify_lock(self, txn, obj):
-        if obj in self.locks and txn in self.locks[obj]:
-            self.locks[obj][txn] = LockType.CERTIFY
+        if txn in self.locks and obj in self.locks[txn]:
+            self.locks[txn][obj] = LockType.CERTIFY
 
     def detect_deadlock(self):
         try:
@@ -77,11 +76,6 @@ class LockManager:
     def free_locks(self, txn):
         released_locks = []
         neighbors = self.waits_for_graph.successors(txn)
-        for obj, txn_locks in self.locks.items():
-            if txn in txn_locks:
-                del txn_locks[txn]
-                if not txn_locks:
-                    del self.locks[obj]
-                else:
-                    self.locks[obj] = txn_locks
+        if txn in self.locks:
+            del self.locks[txn]
         return neighbors
