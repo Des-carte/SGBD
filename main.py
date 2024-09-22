@@ -5,6 +5,8 @@ from parser import *
 raw_input = input('S = ')
 requests = separate_operations(raw_input)
 
+print(requests)
+
 scheduler = Scheduler()
 
 for request in requests:

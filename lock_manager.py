@@ -15,7 +15,7 @@ class DeadlockException(Exception):
 
 class LockManager:
     def __init__(self):
-        waits_for_graph = nx.DiGraph()
+        self.waits_for_graph = nx.DiGraph()
         self.locks = {}
 
     def get_write_lock(self, txn, obj):
@@ -67,4 +67,16 @@ class LockManager:
             return True
         except nx.NetworkXNoCycle:
             return False
-        
+    
+    # Retorna uma lista com a vizinhança do vértice txn e remove todos os locks de txn
+    def free_locks(self, txn):
+        released_locks = []
+        neighbors = self.waits_for_graph.successors(txn)
+        for obj, txn_locks in self.locks.items():
+            if txn in txn_locks:
+                del txn_locks[txn]
+                if not txn_locks:
+                    del self.locks[obj]
+                else:
+                    self.locks[obj] = txn_locks
+        return neighbors
