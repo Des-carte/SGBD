@@ -16,6 +16,7 @@ class DeadlockException(Exception):
 class LockManager:
     def __init__(self):
         self.waits_for_graph = nx.DiGraph()
+        # Dado um objeto, informa o lock e a transação que o possui
         self.locks = {}
 
     def get_write_lock(self, txn, obj):
@@ -25,7 +26,7 @@ class LockManager:
                     if lock_type == LockType.WRITE or lock_type == LockType.CERTIFY:
                         self.waits_for_graph.add_edge(txn, transaction)
                     if self.detect_deadlock():
-                        raise DeadlockException(f"trying to get write lock on {obj}")
+                        raise DeadlockException(f"trying to get write lock on {obj} for transaction {txn}")
                     return False
         if obj not in self.locks:
             self.locks[obj] = {}
@@ -39,6 +40,9 @@ class LockManager:
                     self.waits_for_graph.add_edge(txn, transaction)
                 if self.detect_deadlock():
                     raise DeadlockException(f"trying to get read lock on {obj}")
+                    if self.detect_deadlock():
+                        raise DeadlockException(f"trying to get read lock on {obj} for transaction {txn}")
+
                     return False
         if obj not in self.locks:
             self.locks[obj] = {}
@@ -51,7 +55,7 @@ class LockManager:
                 if transaction != txn:
                     self.waits_for_graph.add_edge(txn, transaction)
                     if self.detect_deadlock():
-                        raise DeadlockException(f"trying to get certify lock on {obj}")
+                        raise DeadlockException(f"trying to get certify lock on {obj} for transaction {txn}")
                     return False
         if obj not in self.locks:
             self.locks[obj] = {}
