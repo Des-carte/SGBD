@@ -22,7 +22,8 @@ class LockManager:
         if obj in self.locks:
             for transaction, lock_type in self.locks[obj].items():
                 if transaction != txn:
-                    self.waits_for_graph.add_edge(txn, transaction)
+                    if lock_type == LockType.WRITE or lock_type == LockType.CERTIFY
+                        self.waits_for_graph.add_edge(txn, transaction)
                     if self.detect_deadlock():
                         raise DeadlockException(f"trying to get write lock on {obj}")
                     return False
@@ -34,10 +35,10 @@ class LockManager:
     def get_read_lock(self, txn, obj):
         if obj in self.locks:
             for transaction, lock_type in self.locks[obj].items():
-                if transaction != txn and lock_type != LockType.READ:
+                if transaction != txn and lock_type == LockType.CERTIFY:
                     self.waits_for_graph.add_edge(txn, transaction)
-                    if self.detect_deadlock():
-                        raise DeadlockException(f"trying to get read lock on {obj}")
+                if self.detect_deadlock():
+                    raise DeadlockException(f"trying to get read lock on {obj}")
                     return False
         if obj not in self.locks:
             self.locks[obj] = {}
