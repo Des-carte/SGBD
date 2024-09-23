@@ -27,5 +27,8 @@ for request in requests:
             scheduler.commit(txn)
     except lm.DeadlockException as e:
         print(e)
+        scheduler.abort(e.most_recent_txn)
+        print(f"Transaction {e.most_recent_txn} aborted")
 
 print('  ' + scheduler.get_schedule())
+print(scheduler.get_long_schedule())
