@@ -30,5 +30,33 @@ for request in requests:
         scheduler.abort(e.most_recent_txn)
         print(f"Transaction {e.most_recent_txn} aborted")
 
-print('  ' + scheduler.get_schedule())
-print(scheduler.get_long_schedule())
+#print('  ' + scheduler.get_schedule())
+#print(scheduler.get_long_schedule())
+
+sch = scheduler.get_schedule()
+
+ops = separate_operations(sch)
+
+listed = []
+
+for op in ops:
+    operation = op[0]
+    txn = op[1]
+    if operation == 'c':
+        listed.append(txn)
+
+schedule = ''
+
+for op in ops:
+    operation = op[0]
+    txn = op[1]
+    obj = op[2]
+
+    if txn in listed:
+        if obj != None:
+            schedule += f"{operation}{txn}({obj})"
+        else:
+            schedule += f"{operation}{txn}"
+
+
+print(schedule)
