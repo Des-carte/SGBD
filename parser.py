@@ -22,3 +22,25 @@ def separate_operations(scheduler):
             transaction = op[4]
             results.append((type, transaction, None))
     return results
+
+def output_filter(scheduler):
+    ops = separate_operations(scheduler)
+    commited_txn_list = []
+    for op in ops:
+        operation = op[0]
+        txn = op[1]
+        if operation == 'c':
+            commited_txn_list.append(txn)
+
+    output_schedule = ''
+    for op in ops:
+        operation = op[0]
+        txn = op[1]
+        obj = op[2]
+        if txn in commited_txn_list:
+            if obj != None:
+                output_schedule += f"{operation}{txn}({obj})"
+            else:
+                output_schedule += f"{operation}{txn}"
+    
+    return output_schedule
