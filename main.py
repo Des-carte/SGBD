@@ -38,10 +38,10 @@ for request in requests:
 
 sch = scheduler.get_schedule()
 
-print("Saída simples apresentada no laboratório:")
-print("\n" + sch + "\n")
-print("Saída longa apresentada no laboratório:")
-print(scheduler.get_long_schedule() + "\n")
+print("\nSaída simples apresentada no laboratório:")
+print(sch)
+print("\nSaída longa apresentada no laboratório:")
+print(scheduler.get_long_schedule())
 
-print("Saída simples filtrada|corrigida:")
+print("\nSaída simples filtrada|corrigida:")
 print(output_filter(sch))
