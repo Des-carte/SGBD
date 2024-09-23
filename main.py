@@ -1,3 +1,9 @@
+"""
+Dupla:
+1. Wanderson Soares da Silva | 538348
+2. Olinto Facó Neto          | 495536
+
+"""
 from scheduler import Scheduler
 import lock_manager as lm
 from parser import *
